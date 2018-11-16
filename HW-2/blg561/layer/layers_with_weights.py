@@ -142,7 +142,7 @@ class Conv2d(LayerWithWeights):
                         dx_temp[n, :, h*self.stride:h*self.stride+FH, 
                             w*self.stride:w*self.stride+FW] += np.multiply(self.W[f],
                                     dprev[n, f, h, w])
-        dx = dx_temp[:, :, self.padding:self.padding + H, self.padding:self.padding+W]
+        dx = dx_temp[:, :, self.padding:self.padding + H, self.padding:self.padding + W]
         self.db = db.copy()
         self.dW = dw.copy()
         return dx, dw, db
