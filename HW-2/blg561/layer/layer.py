@@ -117,19 +117,15 @@ class Dropout(Layer):
             np.random.seed(seed)
         # YOUR CODE STARTS
         if self.mode == 'train':
-            out = None
 
             # Create a dropout mask
-            mask = None
-
+            mask = (np.random.rand(*x.shape) < self.p) / self.p 
             # Do not forget to save the created mask for dropout in order to use it in backward
             self.mask = mask.copy()
-
-            out = None
-
+            out = x*mask
             return out
         elif self.mode == 'test':
-            out = None
+            out = x
             return out
         # YOUR CODE ENDS
         else:
@@ -137,7 +133,7 @@ class Dropout(Layer):
 
     def backward(self, dprev):
 
-        dx = None
+        dx = dprev*self.mask
         return dx
 
 
@@ -215,7 +211,6 @@ class MaxPool2d(Layer):
         N, C, H, W = x.shape
         out_H = np.int(((H - self.pool_height) / self.stride) + 1)
         out_W = np.int(((W - self.pool_width) / self.stride) + 1)
-
         self.x = x.copy()
 
         # Initiliaze the output
@@ -223,6 +218,16 @@ class MaxPool2d(Layer):
 
         # Implement MaxPool
         # YOUR CODE HERE
+        for n in range(N): # Iterate over the input
+            for h in range(out_H): 
+                for w in range(out_W):
+                    h_inc = h*self.stride
+                    w_inc = w*self.stride
+                    temp_x = x[n, :, h_inc:h_inc + self.pool_height, w_inc:w_inc + self.pool_width]
+                    temp_out = np.zeros(out_H)
+                    for counter, submatrix in enumerate(temp_x):
+                        temp_out[counter] = np.max(submatrix)
+                    out[n, :, h, w] = temp_out
 
         return out
 
