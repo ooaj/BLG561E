@@ -108,6 +108,7 @@ class Conv2d(LayerWithWeights):
             for f in range(F): # This is for iterating over the kernels/filters
                 for h in range(out_H):
                     for w in range(out_W):
+                        # e_w_p is the striding part. 
                         element_wise_product = np.multiply(padded_x[n, :, h*self.stride:h*self.stride+FH, 
                             w*self.stride:w*self.stride+FW], self.W[f, :])
                         out[n, f, h, w] = np.sum(element_wise_product) + self.b[f]
@@ -125,12 +126,23 @@ class Conv2d(LayerWithWeights):
         dw = np.zeros_like(self.W).astype(np.float32)
         db = np.zeros_like(self.b).astype(np.float32)
 
-        db = None
-        dw = None
-        dx = None
+       # db = None
+       # dw = None
+       # dx = None
 
         # Your implementation here
-
+        for n in range(N): # This is for iterating over the inputs 
+            for f in range(F): # This is for iterating over the kernels/filters
+                db[f] += np.sum(dprev[n, f])
+                for h in range(out_H):
+                    for w in range(out_W):
+                        dw[f] += np.multiply(padded_x[n, :, h*self.stride:h*self.stride+FH, 
+                            w*self.stride:w*self.stride+FW], dprev[n, f, h, w])
+                        rotated_W = np.rot90(self.W[f, :], 2)
+                        dx_temp[n, :, h*self.stride:h*self.stride+FH, 
+                            w*self.stride:w*self.stride+FW] += np.multiply(self.W[f],
+                                    dprev[n, f, h, w])
+        dx = dx_temp[:, :, self.padding:self.padding + H, self.padding:self.padding+W]
         self.db = db.copy()
         self.dW = dw.copy()
         return dx, dw, db
