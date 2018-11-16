@@ -169,13 +169,12 @@ class BatchNorm(Layer):
             self.x_sub_mean = x - sample_mean
 
             # YOUR CODE HERE
-
+            running_mean = np.zeros(x.shape[1])
+            running_var = np.zeros(x.shape[1])
             # Update our running mean and variance then store.
-
-            running_mean = None
-            running_var = None
-
-            out = None
+            
+            running_mean = self.momentum*running_mean + (1 - self.momentum)*sample_mean 
+            running_var = self.momentum*running_var + (1 - self.momentum)*sample_var
 
             # YOUR CODE ENDS
             self.running_mean = running_mean.copy()
@@ -183,7 +182,7 @@ class BatchNorm(Layer):
 
             self.ivar = 1./np.sqrt(sample_var + 1e-5)
             self.sqrtvar = np.sqrt(sample_var + 1e-5)
-
+            out =  self.gamma*self.x_sub_mean + self.beta
             return out
         elif self.mode == 'test':
             out = None
@@ -240,6 +239,7 @@ class MaxPool2d(Layer):
 
         # Calculate the gradient (dx)
         # YOUR CODE HERE
+
         return dx
 
 
