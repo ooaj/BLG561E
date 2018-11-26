@@ -194,7 +194,19 @@ class BatchNorm(Layer):
     def backward(self, dprev):
         N, D = dprev.shape
         # YOUR CODE HERE
-        dx, dgamma, dbeta = None, None, None
+        dbeta = np.sum(dprev, axis=0)
+        dgamma = np.sum(dprev*self.normalized, axis=0)
+        dx = dprev * self.gamma
+        dx_mu_01 = dx*self.ivar
+        divar = np.sum(dx*self.x_sub_mean,axis = 0)
+        dsqrtvar = -divar / self.sqrtvar
+        dvar = (0.5/self.sqrtvar)*dsqrtvar
+        dsq  = (1/N)*np.ones(dprev.shape)*dvar
+        dx_mu_02 = 2*self.x_sub_mean*dsq
+        d_mu = -1*np.sum(dx_mu_01+dx_mu_02, axis=0)
+        d_x_01 = dx_mu_01 + dx_mu_02
+        d_x_02 = (1/N)*np.ones(dprev.shape)*d_mu
+        dx = d_x_01 + d_x_02
         # Calculate the gradients
         return dx, dgamma, dbeta
 
@@ -240,6 +252,13 @@ class MaxPool2d(Layer):
         # Calculate the gradient (dx)
         # YOUR CODE HERE
 
+        for n in range(N):
+            for c in range(C):
+                for h in range(dprev_H):
+                    for w in range(dprev_W):
+                        max_ind = np.argmax(self.x[n,c,h*self.stride:h*self.stride+self.pool_height,w*self.stride:w*self.stride+self.pool_width])
+                        max_ind_coord = np.unravel_index(max_ind, [self.pool_height,self.pool_width])
+                        dx[n,c, h*self.stride:h*self.stride+self.pool_height, w*self.stride:w*self.stride+self.pool_width][max_ind_coord] = dprev[n, c, h, w]
         return dx
 
 
